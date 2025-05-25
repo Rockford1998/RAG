@@ -1,4 +1,4 @@
-export const chunkText = (text: string, chunkSize = 5): string[] => {
+export const chunkText = (text: string, chunkSize = 2): string[] => {
     const sentences = text.split(/(?<=[.?!])\s+/);
     const chunks: string[] = [];
     let chunk = '';

@@ -1,15 +1,22 @@
+
+
 import { embedWithOllama } from '../ollama';
 import { insertDocument } from '../db';
 import { getSimilarChunks } from '../search';
 import { generateAnswer } from '../answer';
 import { chunkText } from "../chunker";
-
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 interface DocumentMetadata extends Record<string, any> {
     source: string;
     timestamp: string;
     chunkIndex?: number;
 }
+
+
 
 async function storeEmbeddedDocument(
     text: string,
@@ -48,25 +55,35 @@ async function storeEmbeddedDocument(
     }
 }
 
-const train = async (pdfPath: string, chunkSize = 5, chunkOverlap = 1) => {
+const train = async (pdfPath: string, chunkSize = 100, chunkOverlap = 20) => {
     const startTime = Date.now();
     let successCount = 0;
 
     try {
-        console.log(`Extracting text from ${pdfPath}...`);
-        const rawText = "Shubhams age is 27 on 11-05-2025. Shubhams full name is Shubham bankar. He don’t have an girlfriend. He is currently in IT Job with saleri 33k. He is from india"
-        if (!rawText.trim()) {
+        const loader = new PDFLoader(pdfPath, {
+            splitPages: false,
+        });
+
+        const docs = await loader.load();
+
+        if (docs.length === 0) {
+            throw new Error('No documents were extracted from PDF');
+        }
+
+        // Combine all page contents if needed
+        const rawText = docs.map(doc => doc.pageContent).join('\n');
+
+        if (!rawText || rawText.trim().length === 0) {
             throw new Error('Extracted PDF text is empty');
         }
 
-        const chunks = chunkText(rawText);
-        console.log('Chunking complete');
-        console.log('Number of chunks:', chunks);
-        if (chunks.length === 0) {
-            throw new Error('No valid chunks generated');
-        }
+        // Split the text into chunks
+        const textSplitter = new RecursiveCharacterTextSplitter({
+            chunkSize,
+            chunkOverlap,
+        });
 
-        console.log(`Processing ${chunks.length} chunks...`);
+        const chunks = await textSplitter.splitText(rawText);
 
         // Process chunks in parallel batches with limited concurrency
         const batchSize = 5;
@@ -120,14 +137,13 @@ const test = async (q: number) => {
     try {
         let question
         if (q === 1) {
-            question = 'What is age of shubham in 2020?'
+            question = 'How much years of experience atul has?'
         } else if (q === 2) {
-            question = 'what is the Capital of india?'
+            question = 'atuls EDUCATION?'
         } else {
-            question = 'What is the full name of shubham?'
+            question = 'Details about atul?'
         }
-
-        const similarityThreshold = 0.7;
+        const similarityThreshold = 0.75;
 
         // Get relevant chunks with threshold
         const relevantChunks = await getSimilarChunks(question, 3, similarityThreshold);
@@ -136,9 +152,6 @@ const test = async (q: number) => {
             console.warn('No relevant chunks found above similarity threshold');
             return;
         }
-
-        console.log('Relevant chunks:', relevantChunks);
-
         // Extract just the content for the answer generation
         const answer = await generateAnswer(question, relevantChunks);
 
@@ -149,8 +162,6 @@ const test = async (q: number) => {
 }
 
 import express, { Request, Response } from 'express';
-import { constants } from 'buffer';
-import extractTextFromPDF from '../extractor';
 
 const app = express();
 const port = process.env.PORT || 3000;

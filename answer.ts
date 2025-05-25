@@ -3,14 +3,15 @@ import axios from 'axios';
 export const generateAnswer = async (
     query: string,
     contextChunks: string[],
-    model: string = 'gemma3:1b'
+    model: string = 'llama3.2:latest'
 ): Promise<string> => {
     try {
-        console.log("query", query);
         const context = contextChunks
             .map((c, i) => `[Context ${i + 1}]: ${c}`)
             .join('\n\n');
-
+        console.log("context", context);
+        console.log("-----------------------------------");
+        console.log("query", query);
         const prompt = `Answer the question based on the following context:\n\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
 
         const res = await axios.post('http://localhost:11434/api/generate', {
