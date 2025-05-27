@@ -1,5 +1,5 @@
-import { embedWithOllama } from './ollama';
-import { prisma } from './prisma';
+import { embedWithOllama } from '../embedding';
+import { prisma } from '../prisma';
 
 export const getSimilarChunks = async (query: string, top = 3, similarityThreshold = 0.75) => {
   console.log('Searching for similar chunks...', similarityThreshold);

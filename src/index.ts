@@ -1,10 +1,9 @@
 
 
-import { embedWithOllama } from '../ollama';
-import { insertDocument } from '../db';
-import { getSimilarChunks } from '../search';
-import { generateAnswer } from '../answer';
-import { chunkText } from "../chunker";
+import { embedWithOllama } from './embedding';
+import { insertDocument } from './psql/db';
+import { getSimilarChunks } from './psql/search';
+import { generateAnswer } from './answer';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";

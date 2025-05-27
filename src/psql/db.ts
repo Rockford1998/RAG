@@ -1,4 +1,4 @@
-import { prisma } from './prisma';
+import { prisma } from '../prisma';
 
 export const insertDocument = async (content: string, embedding: number[], metadata = {}) => {
     try {
