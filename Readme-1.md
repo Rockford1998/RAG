@@ -1,4 +1,4 @@
 ## Setup of the pgvector datababse
 
-- use following after running docker compose
-  `https://github.com/pgvector/pgvector?tab=readme-ov-file#docker`
+- use docker compose to setup database 
+- npx prisma migrate dev --create-only

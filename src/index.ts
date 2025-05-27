@@ -6,8 +6,6 @@ import { getSimilarChunks } from './psql/search';
 import { generateAnswer } from './answer';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { LlamaCppEmbeddings } from "@langchain/community/embeddings/llama_cpp";
-import { MemoryVectorStore } from "langchain/vectorstores/memory";
 
 interface DocumentMetadata extends Record<string, any> {
     source: string;

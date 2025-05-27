@@ -1,15 +1,19 @@
-# docker-compose.yml
-version: '3.8'
+version: "3.8"
 
 services:
-  postgres:
-    image: postgres:13-alpine3.20
+  pgvector-db:
+    image: pgvector/pgvector:0.8.0-pg17
+    container_name: pgvector-db
+    restart: always
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
     ports:
-      - "5432:5432"
-    restart: always
+      - "5431:5432"
+    volumes:
+      - pgvector-data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+  pgvector-data:
+
+

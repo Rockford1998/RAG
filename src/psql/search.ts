@@ -1,13 +1,18 @@
-import { embedWithOllama } from '../embedding';
-import { prisma } from '../prisma';
+import { embedWithOllama } from "../embedding";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
-export const getSimilarChunks = async (query: string, top = 3, similarityThreshold = 0.75) => {
-  console.log('Searching for similar chunks...', similarityThreshold);
+export const getSimilarChunks = async (
+  query: string,
+  similarityThreshold = 0.75,
+) => {
   const queryEmbedding = await embedWithOllama(query);
-  const result = await prisma.$queryRawUnsafe<any[]>(`
+  const result = (await prisma.$queryRawUnsafe(
+    `
     SELECT content FROM documents
-    ORDER BY embedding <-> '[${queryEmbedding.join(',')}]'
+    ORDER BY embedding <-> '[${queryEmbedding.join(",")}]'
     LIMIT 5;
-  `);
+  `,
+  )) as any[];
   return result.map((row) => row.content);
 };
