@@ -15,5 +15,3 @@ services:
 
 volumes:
   pgvector-data:
-
-

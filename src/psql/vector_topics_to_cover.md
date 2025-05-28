@@ -57,3 +57,33 @@ Would you like a structured roadmap like:
 3. Tool-specific tutorials (e.g., using pgvector or Milvus with LangChain)
 
 Let me know your preferences, and I’ll tailor the learning plan accordingly.
+
+
+
+m (max_connections):
+
+Default: 16
+
+Higher values improve recall but increase index size and build time
+
+Typical range: 10-100
+
+ef_construction:
+
+Default: 64
+
+Controls the quality of the graph during construction
+
+Higher values improve recall but increase build time
+
+Typical range: 50-400
+
+ef_search:
+
+Runtime parameter (not part of index creation)
+
+Controls the number of candidates considered during search
+
+Higher values improve recall but slow down queries
+
+Can be set per query with SET hnsw.ef_search = value

@@ -1,8 +1,5 @@
 
 
-import { embedWithOllama } from './embedding';
-import { insertDocument } from './psql/db';
-import { getSimilarChunks } from './psql/search';
 import { generateAnswer } from './answer';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -12,7 +9,6 @@ interface DocumentMetadata extends Record<string, any> {
     timestamp: string;
     chunkIndex?: number;
 }
-
 
 
 async function storeEmbeddedDocument(
@@ -28,8 +24,7 @@ async function storeEmbeddedDocument(
             }
 
             const embedding = await embedWithOllama(text);
-            await insertDocument(text, embedding, metadata);
-
+            await VectorService.insertVector("document_embeddings", { embedding, content: text, metadata });
             if (attempt > 1) {
                 console.log(`Document stored successfully after ${attempt} attempts`);
             }
@@ -52,7 +47,7 @@ async function storeEmbeddedDocument(
     }
 }
 
-const train = async (pdfPath: string, chunkSize = 100, chunkOverlap = 20) => {
+const train = async (pdfPath: string, chunkSize = 200, chunkOverlap = 20) => {
     const startTime = Date.now();
     let successCount = 0;
 
@@ -140,11 +135,10 @@ const test = async (q: number) => {
         } else {
             question = 'Details about atul?'
         }
-        const similarityThreshold = 0.75;
+        const queryEmbedding = await embedWithOllama(question);
 
         // Get relevant chunks with threshold
-        const relevantChunks = await getSimilarChunks(question, 3, similarityThreshold);
-
+        const relevantChunks = await VectorService.searchVectors("document_embeddings", queryEmbedding);
         if (relevantChunks.length === 0) {
             console.warn('No relevant chunks found above similarity threshold');
             return;
@@ -159,21 +153,29 @@ const test = async (q: number) => {
 }
 
 import express, { Request, Response } from 'express';
+import { embedWithOllama } from './embedding';
+import { VectorService } from './psql/vectorService';
+import { init } from './init';
+
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.get('/train', async (req: Request, res: Response) => {
-    await train("Sample.pdf")
-    res.send('Creating RAG!');
-});
-app.get('/test/:q', async (req: Request, res: Response) => {
-    const q = parseInt(req.params.q, 10);
-    await test(q)
-    res.send('Testing RAG!');
-});
+async function service() {
+    await init();
+    app.get('/train', async (req: Request, res: Response) => {
+        await train("Sample.pdf")
+        res.send('Creating RAG!');
+    });
+    app.get('/test/:q', async (req: Request, res: Response) => {
+        const q = parseInt(req.params.q, 10);
+        await test(q)
+        res.send('Testing RAG!');
+    });
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
+    app.listen(port, () => {
+        console.log(`Server is running on http://localhost:${port}`);
+    });
 
+}
+service()

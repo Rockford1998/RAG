@@ -1,25 +1,29 @@
 import axios from 'axios';
 
+type relevantChunks = {
+    id: number;
+    content: string;
+    metadata: Record<string, any>;
+    distance: number;
+}
+
 export const generateAnswer = async (
     query: string,
-    contextChunks: string[],
+    contextChunks: Array<relevantChunks>,
     model: string = 'llama3.2:latest'
 ): Promise<string> => {
     try {
         const context = contextChunks
-            .map((c, i) => `[Context ${i + 1}]: ${c}`)
+            .map((c, i) => `[Context ${i + 1}]: ${c.content}`)
             .join('\n\n');
-        console.log("context", context);
-        console.log("-----------------------------------");
-        console.log("query", query);
-        const prompt = `Answer the question based on the following context:\n\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
+            
+        console.log("contextChunks", contextChunks);
 
+        const prompt = `Answer the question based on the following context:\n\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
         const res = await axios.post('http://localhost:11434/api/generate', {
             model,
             prompt,
             stream: false,
-        }, {
-            timeout: 30000 // 30-second timeout
         });
 
         if (!res.data?.response) {
