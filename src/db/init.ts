@@ -1,5 +1,5 @@
 import { initializeDatabase } from "./pgsql";
-import { VectorService } from "../psql/vectorService";
+import { VectorService } from "../vectorServices/vectorService";
 
 export async function init() {
   try {

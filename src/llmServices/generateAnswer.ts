@@ -17,8 +17,6 @@ export const generateAnswer = async (
       .map((c, i) => `[Context ${i + 1}]: ${c.content}`)
       .join("\n\n");
 
-    console.log("contextChunks", contextChunks);
-
     const prompt = `Answer the question based on the following context:\n\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
     const res = await axios.post("http://localhost:11434/api/generate", {
       model,
