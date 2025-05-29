@@ -1,6 +1,6 @@
 
 
-import { generateAnswer } from './answer';
+import { generateAnswer } from './LLM/answer';
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
@@ -153,9 +153,9 @@ const test = async (q: number) => {
 }
 
 import express, { Request, Response } from 'express';
-import { embedWithOllama } from './embedding';
+import { embedWithOllama } from './LLM/embedding';
 import { VectorService } from './psql/vectorService';
-import { init } from './init';
+import { init } from './db/init';
 
 
 const app = express();
