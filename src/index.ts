@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 async function service() {
-  await init();
+  await init(); 
   app.get("/train", async (req: Request, res: Response) => {
     await train("Sample.pdf");
     res.send("Creating RAG!");

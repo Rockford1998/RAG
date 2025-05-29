@@ -1,4 +1,6 @@
 import axios from "axios";
+
+// 
 export const generateEmbedding = async (text: string): Promise<number[]> => {
   try {
     // Pre-process the text for better embeddings
