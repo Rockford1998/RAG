@@ -10,6 +10,7 @@ router.get("/train", async (req, res) => {
 });
 
 router.get("/test/:q", async (req, res) => {
+    console.log("Testing RAG with query:", req.params.q);
     const q = parseInt(req.params.q, 10);
     await test(q);
     res.send("Testing RAG!");

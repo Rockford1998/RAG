@@ -3,6 +3,7 @@ import { generateEmbedding } from "../llmServices/generateEmbedding";
 import { VectorService } from "../vectorServices/vectorService";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { generateAnswer } from "../llmServices/generateAnswer";
+import { promptImprovement } from "../llmServices/promptImprovement";
 
 interface DocumentMetadata extends Record<string, any> {
   source: string;
@@ -157,27 +158,33 @@ export const train = async (
 
 export const test = async (q: number) => {
   try {
-    let question;
+    let prompt;
     if (q === 1) {
-      question = "How much years of experience atul has?";
+      prompt = "features of Java programming language?";
     } else if (q === 2) {
-      question = "atuls EDUCATION?";
+      prompt = "four pillers of oops concepts?";
     } else {
-      question = "Details about atul?";
+      prompt = "Details about atul?";
     }
-    const queryEmbedding = await generateEmbedding(question);
+    console.log("Testing RAG with query:", prompt);
+    const improvedPrompt = await promptImprovement(prompt);
+    console.log("Improved Prompt:", improvedPrompt);
+    const queryEmbedding = await generateEmbedding(improvedPrompt);
 
     // Get relevant chunks with threshold
     const relevantChunks = await VectorService.searchVectors(
       "document_embeddings",
       queryEmbedding,
     );
+    console.log(relevantChunks.length, "relevant chunks found");
+    console.log("Relevant Chunks:", relevantChunks);
+
     if (relevantChunks.length === 0) {
       console.warn("No relevant chunks found above similarity threshold");
       return;
     }
     // Extract just the content for the answer generation
-    const answer = await generateAnswer(question, relevantChunks);
+    const answer = await generateAnswer(prompt, relevantChunks);
 
     console.log("Answer:", answer);
   } catch (error) {

@@ -7,7 +7,6 @@ const port = process.env.PORT || 3000;
 
 async function service() {
   await init();
-
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use("/", router)
@@ -16,4 +15,5 @@ async function service() {
     console.log(`Server is running on http://localhost:${port}`);
   });
 }
+
 service();

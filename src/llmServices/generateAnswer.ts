@@ -17,7 +17,17 @@ export const generateAnswer = async (
       .map((c, i) => `[Context ${i + 1}]: ${c.content}`)
       .join("\n\n");
 
-    const prompt = `Answer the question based on the following context:\n\n${context}\n\nQuestion: ${query}\n\nAnswer:`;
+    const prompt = `Answer the following question using only the context below. If the context does not contain the answer, say "I don't know."
+
+                    Context:
+                    ${context}
+
+                    Question:
+                    ${query}
+
+                    Answer:
+                    `;
+
     const res = await axios.post("http://localhost:11434/api/generate", {
       model,
       prompt,
