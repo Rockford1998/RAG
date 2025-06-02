@@ -1,6 +1,9 @@
 import { initializeDatabase } from "./pgsql";
 import { VectorService } from "../vectorServices/vectorService";
 
+
+// This function initializes the database and creates a table for storing document embeddings.
+// It should be called once at application startup to set up the necessary schema.
 export async function init() {
   try {
     // Initialize the database

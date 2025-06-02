@@ -57,6 +57,8 @@ export const storeEmbeddedDocument = async ({
   }
 };
 
+
+// 
 export const train = async (
   pdfPath: string,
   chunkSize = 200,
@@ -95,10 +97,11 @@ export const train = async (
     const batchSize = 5;
     for (let i = 0; i < chunks.length; i += batchSize) {
       const batch = chunks.slice(i, i + batchSize);
-
       await Promise.all(
         batch.map(async (chunk, index) => {
           try {
+
+
             await storeEmbeddedDocument({
               metadata: {
                 source: pdfPath,
@@ -108,24 +111,19 @@ export const train = async (
               },
               text: chunk,
             });
-            // await storeEmbeddedDocument(chunk, {
-            //   source: pdfPath,
-            //   timestamp: new Date().toISOString(),
-            //   chunkIndex: i + index,
-            //   totalChunks: chunks.length,
-            // });
+
             successCount++;
 
             // Progress reporting
             if (successCount % 10 === 0 || successCount === chunks.length) {
               console.log(
-                `Processed ${successCount}/${
-                  chunks.length
+                `Processed ${successCount}/${chunks.length
                 } chunks (${Math.round(
                   (successCount / chunks.length) * 100,
                 )}%)`,
               );
             }
+
           } catch (error) {
             console.error(
               `Failed to process chunk ${i + index}:`,
