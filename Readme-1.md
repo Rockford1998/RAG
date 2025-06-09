@@ -1,4 +1,7 @@
 ## Setup of the pgvector datababse
 
 - use docker compose to setup database 
-- npx prisma migrate dev --create-only
+
+- improve the file scrapping
+- improve the searching promp
+-  

@@ -6,8 +6,8 @@
 | Chunking        | Custom chunking logic                                             |
 | Embedding model | `ollamanomic-embed-text`                                          |
 | Vector DB       | `PostgreSQL` + [`pgvector`](https://github.com/pgvector/pgvector) |
-| ORM / DB Access | `pg` or `Prisma` (with pgvector extension)                        |
-| LLM             | `gemma3:1b`                                                       |
+| ORM / DB Access | `pg`                                                              |
+| LLM             | `gemma3:1b` or any                                                |
 
 # docker setup
 
@@ -80,7 +80,6 @@ rag-system/
 5. **System embeds query**, does `pgvector` similarity search
 6. **Relevant chunks sent to LLM via Ollama**
 7. **LLM answers based on context**
-
 ---
 
 ## 🔌 Backend API (Express/Fastify)

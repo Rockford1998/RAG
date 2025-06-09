@@ -18,6 +18,7 @@ type StoreEmbeddedDocumentType = {
   metadata: DocumentMetadata;
 };
 
+//
 export const storeEmbeddedDocument = async ({
   text,
   metadata,
@@ -36,9 +37,11 @@ export const storeEmbeddedDocument = async ({
         content: text,
         metadata,
       });
+
       if (attempt > 1) {
         console.log(`Document stored successfully after ${attempt} attempts`);
       }
+
       return;
     } catch (error) {
       if (attempt === retryCount) {
@@ -156,6 +159,7 @@ export const train = async (
   }
 };
 
+//
 export const test = async (q: number) => {
   try {
     let prompt;
