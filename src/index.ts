@@ -11,6 +11,15 @@ async function service() {
   app.use(express.urlencoded({ extended: true }));
   app.use("/", router)
 
+  app.use((err: any, req: any, res: any, next: any) => {
+    if (err.message) {
+      return res.status(400).json({ error:err.message });
+    }
+
+    console.error("Unhandled error:", err);
+    res.status(500).json({ error: "Server error" });
+  });
+
   app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
   });
