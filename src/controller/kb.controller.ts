@@ -6,6 +6,7 @@ import { generateAnswer } from "../llmServices/generateAnswer";
 import { promptImprovement } from "../llmServices/promptImprovement";
 import { Request, Response } from "express";
 import { generateFileHash } from "../util/generateFileHash";
+import { readFile } from "../util/readFile";
 
 interface DocumentMetadata extends Record<string, any> {
   source: string;
@@ -79,9 +80,9 @@ export const train = async (
       res.status(400).send("No file uploaded");
       return;
     }
-    const pdfPath = `uploads/${file.filename}`
+    const filePath = `uploads/${file.filename}`
 
-    const fileHash = await generateFileHash({ filePath: pdfPath });
+    const fileHash = await generateFileHash({ filePath: filePath });
     if (await VectorService.CheckIfkBPresentByFileHash({ fileHash })) {
       console.log("Knowledge base already exists for this file, skipping processing.");
       res.status(200).json({
@@ -91,27 +92,23 @@ export const train = async (
       return;
     }
 
-    const loader = new PDFLoader(pdfPath, {
-      splitPages: false,
-    });
-
-    const docs = await loader.load();
+    // Load the file text based on its type
+    const docs = await readFile({ fileName: file.filename, filePath })
     if (docs.length === 0) {
       throw new Error("No documents were extracted from PDF");
     }
 
     // Combine all page contents if needed
     const rawText = docs.map((doc) => doc.pageContent).join("\n");
+
     if (!rawText || rawText.trim().length === 0) {
       throw new Error("Extracted PDF text is empty");
     }
-
     // Split the text into chunks
     const textSplitter = new RecursiveCharacterTextSplitter({
       chunkSize,
       chunkOverlap,
     });
-    console.log("text splitter")
     const chunks = await textSplitter.splitText(rawText);
     // Process chunks in parallel batches with limited concurrency
     const batchSize = 5;
@@ -123,7 +120,7 @@ export const train = async (
             await storeEmbeddedDocument({
               text: chunk,
               metadata: {
-                source: pdfPath,
+                source: filePath,
                 timestamp: new Date().toISOString(),
                 chunkIndex: i + index,
                 totalChunks: chunks.length,
@@ -182,7 +179,7 @@ export const test = async (q: number) => {
     } else if (q === 2) {
       prompt = "four pillers of oops concepts?";
     } else {
-      prompt = "Details about atul?";
+      prompt = "full name of PCOE?";
     }
     console.log("Testing RAG with query:", prompt);
     const improvedPrompt = await promptImprovement(prompt);

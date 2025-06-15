@@ -18,15 +18,17 @@
     "express": "^5.1.0",
     "implementation-of-the-rag": "file:",
     "langchain": "^0.3.27",
-    "mammoth": "^1.9.0",
+    "mammoth": "^1.9.1",
     "multer": "^2.0.1",
     "node-llama-cpp": "^3.8.1",
+    "officeparser": "^4.2.0",
     "pdf-parse": "^1.1.1",
     "pdfreader": "^3.0.7",
     "pg": "^8.16.0",
     "pgvector": "^0.2.1",
     "sequelize": "^6.37.7",
-    "typeorm": "^0.3.23"
+    "typeorm": "^0.3.23",
+    "word-extractor": "^1.0.4"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",
