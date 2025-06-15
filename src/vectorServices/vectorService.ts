@@ -5,9 +5,11 @@ import { appPool } from "../db/pgsql";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
+const TABLE_NAME = "document_embeddings";
 
 class VectorService {
-  //
+
+
   private static async executeQuery<T>(
     query: string,
     params: any[] = [],
@@ -16,7 +18,6 @@ class VectorService {
       throw new Error("Database connection pool is not initialized");
     }
     const client = await appPool.connect();
-
     try {
       const result = await retry(
         () => client.query(query, params),
@@ -31,7 +32,31 @@ class VectorService {
     }
   }
 
-  //
+
+  public static async CheckIfkBPresentByFileHash({ fileHash }: { fileHash: string }) {
+    // Optional: validate TABLE_NAME against an allowed list if it's dynamic
+    const query = `
+    SELECT 1
+    FROM ${TABLE_NAME}
+    WHERE metadata->>'fileHash' = $1
+    LIMIT 1;
+  `;
+
+    const result = await this.executeQuery(query, [fileHash]) as any[];
+
+    return result.length > 0;
+  }
+
+
+  /**
+   *      
+   * @description Creates a table with a vector index for storing document embeddings.
+   * @param tableName - to make different tables for different users or purposes. default is "document_embeddings".
+   * @param dimensions - The number of dimensions for the vector embeddings.
+   * @param indexParams - Parameters for the vector index, including type (hnsw or ivfflat) and specific settings.
+   * @returns A promise that resolves when the table and index are created.
+   */
+
   public static async createTableWithIndex(
     tableName: string = "document_embeddings",
     dimensions: number,
@@ -57,12 +82,10 @@ class VectorService {
       CREATE INDEX IF NOT EXISTS idx_${tableName}_embedding 
       ON ${tableName} 
       USING ${indexParams.type} (embedding vector_l2_ops)
-      ${
-        indexParams.type === "hnsw"
-          ? `WITH (m = ${indexParams.m || 16}, ef_construction = ${
-              indexParams.efConstruction || 64
-            })`
-          : `WITH (lists = ${indexParams.lists || 100})`
+      ${indexParams.type === "hnsw"
+        ? `WITH (m = ${indexParams.m || 16}, ef_construction = ${indexParams.efConstruction || 64
+        })`
+        : `WITH (lists = ${indexParams.lists || 100})`
       };
     `);
 
@@ -121,6 +144,7 @@ class VectorService {
       metadata?: Record<string, any>;
     },
   ) {
+
     return this.executeQuery<{ id: number }>(
       `
         INSERT INTO ${tableName} (embedding, content, metadata)
@@ -134,7 +158,8 @@ class VectorService {
       ],
     );
   }
-  //
+
+  // --- Search vectors using HNSW 
   public static async searchVectors(
     tableName: string = "document_embeddings",
     queryEmbedding: number[],
@@ -168,6 +193,13 @@ class VectorService {
         ...(options.filterParams || []),
       ],
     );
+  }
+
+  public static async deleteOutdatedKnowledgeByFileName(
+    { fileName }: { fileName: string },
+  ) {
+    await this.executeQuery(`    DELETE FROM documents
+    WHERE metadata->>'filename' = ${fileName}`);
   }
 }
 
