@@ -1,7 +1,7 @@
 // src/services/vector.service.ts
 import { toSql } from "pgvector/pg";
 import { retry } from "../util/retry";
-import { appPool } from "../db/pgsql";
+import { appPool } from "./pgsql";
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
@@ -9,7 +9,7 @@ const TABLE_NAME = "document_embeddings";
 
 class VectorService {
 
-
+  //
   private static async executeQuery<T>(
     query: string,
     params: any[] = [],
@@ -34,16 +34,13 @@ class VectorService {
 
 
   public static async CheckIfkBPresentByFileHash({ fileHash }: { fileHash: string }) {
-    // Optional: validate TABLE_NAME against an allowed list if it's dynamic
     const query = `
     SELECT 1
     FROM ${TABLE_NAME}
     WHERE metadata->>'fileHash' = $1
     LIMIT 1;
   `;
-
     const result = await this.executeQuery(query, [fileHash]) as any[];
-
     return result.length > 0;
   }
 

@@ -8,3 +8,11 @@ http://localhost:3000/test/3
 
 ###
 http://localhost:3000/test/1
+
+###
+POST http://localhost:3000/chat
+Content-Type:  application/json
+
+{
+  "prompt": "Hello, how are you?"
+}

@@ -1,13 +1,14 @@
 // routes/kb.routes.ts
 import { Router } from "express";
-import { test, train } from "../controller/kb.controller";
+import { addKnowledgeBase, chatBot, test,  } from "../controller/kb.controller";
 import { upload } from "../middlewares/uploadMiddleware";
 
 const router = Router();
 
 
-// Endpoint to handle file upload and training
-router.post("/upload", upload.single("file"), train);
+// Endpoint to handle file upload and training the knowledge base
+router.post("/upload", upload.single("file"), addKnowledgeBase);
+router.post("/chat", chatBot);
 
 router.get("/test/:q", async (req, res) => {
     console.log("Testing RAG with query:", req.params.q);

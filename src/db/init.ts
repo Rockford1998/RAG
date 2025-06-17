@@ -1,5 +1,5 @@
 import { initializeDatabase } from "./pgsql";
-import { VectorService } from "../vectorServices/vectorService";
+import { VectorService } from "./vectorService";
 
 
 // This function initializes the database and creates a table for storing document embeddings.

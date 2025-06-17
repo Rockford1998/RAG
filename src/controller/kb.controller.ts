@@ -1,72 +1,16 @@
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { generateEmbedding } from "../llmServices/generateEmbedding";
-import { VectorService } from "../vectorServices/vectorService";
-import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { VectorService } from "../db/vectorService";
 import { generateAnswer } from "../llmServices/generateAnswer";
 import { promptImprovement } from "../llmServices/promptImprovement";
 import { Request, Response } from "express";
 import { generateFileHash } from "../util/generateFileHash";
 import { readFile } from "../util/readFile";
-
-interface DocumentMetadata extends Record<string, any> {
-  source: string;
-  timestamp: string;
-  chunkIndex?: number;
-  totalChunks?: number;
-  fileName: string,
-}
-
-type StoreEmbeddedDocumentType = {
-  text: string;
-  retryCount?: number;
-  metadata: DocumentMetadata;
-};
-
-//
-export const storeEmbeddedDocument = async ({
-  text,
-  metadata,
-  retryCount = 3,
-}: StoreEmbeddedDocumentType): Promise<void> => {
-  for (let attempt = 1; attempt <= retryCount; attempt++) {
-    try {
-      if (!text.trim()) {
-        console.warn("Skipping empty text document");
-        return;
-      }
-      const embedding = await generateEmbedding(text);
-      await VectorService.insertVector("document_embeddings", {
-        embedding,
-        content: text,
-        metadata,
-      });
-
-      if (attempt > 1) {
-        console.log(`Document stored successfully after ${attempt} attempts`);
-      }
-
-      return;
-    } catch (error) {
-      if (attempt === retryCount) {
-        console.error(`Failed to store document after ${retryCount} attempts`, {
-          error: error instanceof Error ? error.message : String(error),
-          textLength: text.length,
-          metadata,
-        });
-        throw new Error("Document storage failed");
-      }
-
-      // Exponential backoff
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000 * Math.pow(2, attempt)),
-      );
-    }
-  }
-};
+import { storeEmbeddedDocument } from "../services/storeEmbeddedDocument";
 
 
-// 
-export const train = async (
+// train  
+export const addKnowledgeBase = async (
   req: Request, res: Response
 ) => {
   let chunkSize = 400;
@@ -85,6 +29,7 @@ export const train = async (
     const fileHash = await generateFileHash({ filePath: filePath });
     if (await VectorService.CheckIfkBPresentByFileHash({ fileHash })) {
       console.log("Knowledge base already exists for this file, skipping processing.");
+
       res.status(200).json({
         success: true,
         message: "Knowledge base already exists for this file",
@@ -167,6 +112,44 @@ export const train = async (
       chunksProcessed: successCount,
       duration: `${duration.toFixed(2)} seconds`,
     });
+  }
+};
+
+// try quering the knowledge base with different questions
+export const chatBot = async (req: Request, res: Response
+) => {
+  try {
+    const originalPropmt = req.body.prompt;
+    // console.log("originalPropmt:", originalPropmt);
+
+    // const improvedPrompt = await promptImprovement(originalPropmt);
+    // console.log("Improved Prompt:", improvedPrompt);
+
+    const queryEmbedding = await generateEmbedding(originalPropmt);
+
+    // Get relevant chunks with threshold
+    const relevantChunks = await VectorService.searchVectors(
+      "document_embeddings",
+      queryEmbedding,
+    );
+
+    if (relevantChunks.length === 0) {
+      console.warn("No relevant chunks found above similarity threshold");
+      return;
+    }
+    // Extract just the content for the answer generation
+    const answer = await generateAnswer(originalPropmt, relevantChunks);
+    res.status(200).json({
+      success: true,
+      answer: answer,
+    });
+
+    console.log("Answer:", answer);
+  } catch (error) {
+    console.error(
+      "Test failed:",
+      error instanceof Error ? error.message : String(error),
+    );
   }
 };
 
